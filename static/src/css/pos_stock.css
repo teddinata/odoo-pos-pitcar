@@ -1,0 +1,90 @@
+/* POS Stock Display Styles */
+
+/* Ensure product card has relative positioning */
+.product-card,
+article.product {
+    position: relative !important;
+}
+
+.product-stock-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-width: 45px;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* Stock level colors */
+.stock-high {
+    background-color: #28a745;
+    color: white;
+}
+
+.stock-medium {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.stock-low {
+    background-color: #dc3545;
+    color: white;
+}
+
+.stock-out {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Animation for low stock warning */
+.stock-low, .stock-out {
+    animation: pulse-warning 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Product card overlay for out of stock */
+.product-out-of-stock::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(108, 117, 125, 0.1);
+    pointer-events: none;
+    border-radius: 4px;
+    z-index: 1;
+}
+
+/* Stock info text */
+.stock-info-text {
+    font-size: 11px;
+    margin-top: 4px;
+    font-style: italic;
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .product-stock-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+        min-width: 40px;
+        top: 4px;
+        right: 4px;
+    }
+}
