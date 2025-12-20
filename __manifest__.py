@@ -25,7 +25,7 @@ Features:
         'point_of_sale.assets': [
             # 'pos_stock_display/static/src/css/pos_stock.css',
             # 'pos_stock_display/static/src/js/models.js',
-            'pos_stock_display/static/src/js/ProductScreen.js',
+            'odoo-pos-pitcar/static/src/js/ProductScreen.js',
         ],
     },
     'installable': True,
