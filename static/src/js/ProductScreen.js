@@ -1,11 +1,5 @@
 /** @odoo-module */
 
-/**
- * Ultra-simple stock display
- * Directly manipulates DOM on load
- */
-
-// Wait for DOM to be ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initStockDisplay);
 } else {
@@ -15,21 +9,17 @@ if (document.readyState === 'loading') {
 function initStockDisplay() {
     console.log('POS Stock Display: Initializing...');
     
-    // Add global style
     addGlobalStyle();
     
-    // Watch for POS screen changes
     const observer = new MutationObserver(() => {
         addStockBadges();
     });
     
-    // Observe body for changes
     observer.observe(document.body, {
         childList: true,
         subtree: true
     });
     
-    // Initial run
     setTimeout(() => addStockBadges(), 1000);
     setTimeout(() => addStockBadges(), 3000);
     setTimeout(() => addStockBadges(), 5000);
@@ -77,6 +67,14 @@ function addGlobalStyle() {
 }
 
 function addStockBadges() {
+    // Get POS instance
+    const pos = window.posmodel || odoo.__DEBUG__?.services?.pos;
+    
+    if (!pos) {
+        console.log('POS Stock Display: POS not ready yet');
+        return;
+    }
+    
     // Find all product articles
     const articles = document.querySelectorAll('article');
     
@@ -94,11 +92,31 @@ function addStockBadges() {
                 return;
             }
             
-            // For now, add test badge with random stock
-            const testQty = Math.floor(Math.random() * 30);
-            const level = testQty > 20 ? 'high' : testQty > 10 ? 'medium' : testQty > 0 ? 'low' : 'out';
-            const text = testQty > 0 ? `Stok: ${testQty}` : 'Habis';
+            // Get product ID from article
+            const productId = getProductIdFromArticle(article);
             
+            if (!productId) {
+                return;
+            }
+            
+            // Get product from POS database
+            const product = pos.db.get_product_by_id(productId);
+            
+            if (!product) {
+                return;
+            }
+            
+            // Only show stock for storable products
+            if (product.type !== 'product') {
+                return;
+            }
+            
+            // Get real stock quantity
+            const qty = parseFloat(product.qty_available || 0);
+            const level = qty > 20 ? 'high' : qty > 10 ? 'medium' : qty > 0 ? 'low' : 'out';
+            const text = qty > 0 ? `Stok: ${Math.round(qty)}` : 'Habis';
+            
+            // Create badge
             const badge = document.createElement('div');
             badge.className = `pos-stock-badge pos-stock-${level}`;
             badge.textContent = text;
@@ -106,13 +124,48 @@ function addStockBadges() {
             article.appendChild(badge);
             
             if (index === 0) {
-                console.log('POS Stock Display: Badge added to first product:', text);
+                console.log('POS Stock Display: Badge added to first product:', product.display_name, 'qty:', qty);
             }
             
         } catch (error) {
             console.error('POS Stock Display: Error adding badge:', error);
         }
     });
+}
+
+function getProductIdFromArticle(article) {
+    // Try multiple methods to get product ID
+    try {
+        // Method 1: data-product-id attribute
+        if (article.dataset.productId) {
+            return parseInt(article.dataset.productId);
+        }
+        
+        // Method 2: From onclick attribute or class
+        const className = article.className;
+        const match = className.match(/product-(\d+)/);
+        if (match) {
+            return parseInt(match[1]);
+        }
+        
+        // Method 3: Find in child elements
+        const productIdElement = article.querySelector('[data-product-id]');
+        if (productIdElement) {
+            return parseInt(productIdElement.dataset.productId);
+        }
+        
+        // Method 4: Check article attributes
+        for (let attr of article.attributes) {
+            if (attr.name.includes('product') && !isNaN(attr.value)) {
+                return parseInt(attr.value);
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error getting product ID:', error);
+        return null;
+    }
 }
 
 console.log('POS Stock Display: Module loaded');
